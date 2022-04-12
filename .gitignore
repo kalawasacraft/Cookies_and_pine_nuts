@@ -59,3 +59,7 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+# Global Vars and Outputs
+Assets/AppGlobal.cs
+Assets/AppGlobal.cs.meta
+Builds/

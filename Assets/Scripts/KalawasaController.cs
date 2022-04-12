@@ -4,10 +4,17 @@ using UnityEngine;
 
 public class KalawasaController : MonoBehaviour
 {
+    public static KalawasaController Instance;
+
+    public Transform startPoint;
     [SerializeField] private float _speed = 1.5f;
     [SerializeField] private float _smoothVelocity = 0.05f;
     [SerializeField] private float _stunTime = 0.3f;
+    [SerializeField] private AudioClip _closeEyes;
+    [SerializeField] private AudioClip _rolling;
     public GameObject stunObject;
+    public GameObject beakObject;
+    public BoxDialog talkDialog;
 
     private Rigidbody2D _rigidbody;
     private Animator _animator;
@@ -18,66 +25,122 @@ public class KalawasaController : MonoBehaviour
     private bool _facingRight = false;
     private bool _isPickUp = false;
     private bool _isInit = false;
+    private bool _hasCookie = false;
     
+    private string _goOutAnimationTriggerName = "GoOut";
+    private string _pickUpAnimationTriggerName = "PickUp";
+    private string _isIdleAnimationBoolName = "IsIdle";
+    private string _isRightAnimationBoolName = "IsRight";
+    private string _idleRightAnimationName = "IdleRight";
+    private string _idleLeftAnimationName = "IdleLeft";
+    private string _initAnimationName = "Init";
+    private string _tagPickUpName = "PickUp";
+    private string _tagRollingName = "Rolling";
+    private string _layerOffsideName = "Offside";
+    private string _layerMainName = "Default";
 
     void Awake()
     {
+        Instance = this;
+
         _rigidbody = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
-        //_audio = GetComponent<AudioSource>();
+        _audio = GetComponent<AudioSource>();
     }
 
     void Start()
     {
-        gameObject.layer = LayerMask.NameToLayer("Offside");
-        Invoke("Init", 4f);
+        gameObject.layer = LayerMask.NameToLayer(_layerOffsideName);
     }
 
     void Update()
     {
         if (_isInit) {
+            
             float horizontalInput = Input.GetAxisRaw("Horizontal");
             float verticalInput = Input.GetAxisRaw("Vertical");
             
-            _movement = new Vector2(horizontalInput, 0f);
-            _facingRight = (horizontalInput > 0 ? true : (horizontalInput < 0 ? false : _facingRight));
+            if (!_isPickUp) {
+                _movement = new Vector2(horizontalInput, 0f);
+                _facingRight = (horizontalInput > 0 ? true : (horizontalInput < 0 ? false : _facingRight));
+            }
 
             if (verticalInput == -1 && !_isPickUp) {
                 _movement = Vector2.zero;
                 _rigidbody.velocity = Vector2.zero;
-                _animator.SetTrigger("PickUp");
+                if (!_hasCookie) {
+                    _animator.SetTrigger(_pickUpAnimationTriggerName);
+                } else {
+                    DropCookie();
+                }
             }
         }
     }
 
     void FixedUpdate()
     {
-        float horizontalVelocity = _movement.normalized.x * _speed;
-        _rigidbody.velocity = Vector3.SmoothDamp(_rigidbody.velocity, new Vector2(horizontalVelocity, _rigidbody.velocity.y), ref _velocity, _smoothVelocity);
+        if (_isInit) {
+            float horizontalVelocity = _movement.normalized.x * _speed;
+            _rigidbody.velocity = Vector3.SmoothDamp(_rigidbody.velocity, new Vector2(horizontalVelocity, _rigidbody.velocity.y), ref _velocity, _smoothVelocity);
+        }
     }
 
     void LateUpdate()
     {
-        _animator.SetBool("IsIdle", _movement == Vector2.zero);
-        _animator.SetBool("IsRight", _facingRight);
+        _animator.SetBool(_isIdleAnimationBoolName, _movement == Vector2.zero);
+        _animator.SetBool(_isRightAnimationBoolName, _facingRight);
 
-        if (_animator.GetCurrentAnimatorStateInfo(0).IsTag("PickUp")) {
+        if (_animator.GetCurrentAnimatorStateInfo(0).IsTag(_tagRollingName)) {
+            if (!_audio.loop) {
+                _audio.loop = true;
+                _audio.clip = _rolling;
+                _audio.Play();
+            }
+        } else {
+            if (_audio.loop) {
+                _audio.Stop();
+            }
+            _audio.loop = false;
+        }
+
+        if (_animator.GetCurrentAnimatorStateInfo(0).IsTag(_tagPickUpName)) {
             _isPickUp = true;
         } else {
             _isPickUp = false;
         }
     }
 
-    private void Init()
+    public static void Init(float value)
     {
-        _animator.SetTrigger("GoOut");
+        Instance.Invoke("EnableTalk", 1f);
+        Instance.talkDialog.SetTalk(":O");
+        Instance.Invoke("DisableTalk", 4f);
+        Instance.Invoke("StartGoOut", value);
+    }
+
+    private void EnableTalk() 
+    {
+        Instance.talkDialog.ActiveDialog(true);
+    }
+
+    private void DisableTalk()
+    {
+        Instance.talkDialog.ActiveDialog(false);
+    }
+
+    public void StartGoOut()
+    {
+        Instance._animator.SetTrigger(Instance._goOutAnimationTriggerName);
     }
 
     private void Ready()
     {
         _rigidbody.bodyType = RigidbodyType2D.Dynamic;
-        gameObject.layer = LayerMask.NameToLayer("Default");
+        gameObject.layer = LayerMask.NameToLayer(_layerMainName);
         Active();
+        ReadyFace();
+
+        GameManager.BeginTimer();
     }
 
     private void Active()
@@ -86,10 +149,89 @@ public class KalawasaController : MonoBehaviour
         stunObject.SetActive(false);
     }
 
+    private void ForceIdle()
+    {
+        if (_facingRight) {
+            _animator.Play(_idleRightAnimationName);
+        } else {
+            _animator.Play(_idleLeftAnimationName);
+        }
+    }
+
     public void StunTime()
     {
         _isInit = false;
+        _movement = Vector2.zero;
+        ForceIdle();
+        StunFace();
+        DropCookie();
         stunObject.SetActive(true);
         Invoke("Active", _stunTime);
+    }
+
+    public void CloseEyesSound()
+    {
+        _audio.clip = _closeEyes;
+        _audio.Play();
+    }
+
+    public void PickUpCookie()
+    {
+        _hasCookie = true;
+    }
+
+    private void DropCookie()
+    {
+        if (beakObject.transform.childCount > 0) {
+            beakObject.transform.GetChild(0).gameObject.GetComponent<CookieInit>().Drop();
+            Invoke("ChangeStateHasCookie", 0.3f);
+        }
+    }
+
+    private void ChangeStateHasCookie()
+    {
+        _hasCookie = false;
+    }
+
+    public static void ReadyFace()
+    {
+        Instance.Invoke("EnableTalk", 0f);
+        Instance.talkDialog.SetTalk("Go!");
+        Instance.Invoke("DisableTalk", 1.5f);
+    }
+
+    public static void HappinessFace()
+    {
+        Instance.Invoke("EnableTalk", 0f);
+        Instance.talkDialog.SetTalk(":D");
+        Instance.Invoke("DisableTalk", 2f);
+    }
+
+    public void StunFace()
+    {
+        Invoke("EnableTalk", 0f);
+        talkDialog.SetTalk(":S");
+        Invoke("DisableTalk", 1f);
+    }
+
+    public static bool HasCookie()
+    {
+        return Instance._hasCookie;
+    }
+
+    public static void SetInitActive(bool value)
+    {
+        Instance._isInit = value;
+    }
+
+    public static bool GetIsInit()
+    {
+        return Instance._isInit;
+    }
+
+    public static void CompletedHappiness()
+    {
+        Instance.transform.position = Instance.startPoint.position;
+        Instance._animator.Play(Instance._initAnimationName);
     }
 }
