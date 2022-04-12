@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float _timeInitPineNutsPool = 3f;
     [SerializeField] private float _timeStartShouting = 2f;
     [SerializeField] private float _gameTime = 60f;
+    private int _gameLevel;
     private float _myScore = 0f;
     private int _potentialToAdd = 0;
     private float _timePlaying;
@@ -23,9 +24,21 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        GetTopPlayer();
-        UIManager.SetScore(_myScore);
-        UIManager.SetToAdd(_potentialToAdd);
+        
+    }
+
+    public static void InitGame()
+    {
+        Instance.GetTopPlayer();
+        UIManager.SetScore(Instance._myScore);
+        UIManager.SetToAdd(Instance._potentialToAdd);
+        
+        Instance.Invoke("LoadInitGame", 0.5f);
+    }
+
+    private void LoadInitGame()
+    {
+        InitialTrigger.Init();
     }
 
     private void GetTopPlayer()
@@ -75,6 +88,16 @@ public class GameManager : MonoBehaviour
     public static void Completed()
     {
         UIManager.Finish(true, Instance._myScore + Instance._potentialToAdd, Instance._timePlaying);
+    }
+
+    public static void SetGameLevel(int level)
+    {
+        Instance._gameLevel = level;
+    }
+
+    public static int GetGameLevel()
+    {
+        return Instance._gameLevel;
     }
 
     private IEnumerator UpdateTimer()

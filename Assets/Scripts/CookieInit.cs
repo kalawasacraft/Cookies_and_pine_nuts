@@ -17,12 +17,14 @@ public class CookieInit : MonoBehaviour
     
     [SerializeField] private int _valueHappiness = 32;
     [SerializeField] private float _fadeTime = 1f;
+    private bool _isInit = true;
     private bool _onTheGround = false;
     private bool _isPickUp = false;
 
     private string _tagGroundName = "Ground";
     private string _tagPlayerName = "Player";
     private string _tagBagName = "Bag";
+    private string _layerOffsideName = "Offside";
 
     void Awake()
     {
@@ -56,6 +58,7 @@ public class CookieInit : MonoBehaviour
         _valueHappiness /= 2;
         talkDialog.SetTalk(_valueHappiness.ToString());
         if (_valueHappiness == 0) {
+            gameObject.layer = LayerMask.NameToLayer(_layerOffsideName);
             StartCoroutine(FadeOff());
         }
     }
@@ -81,13 +84,14 @@ public class CookieInit : MonoBehaviour
         if (collision.CompareTag(_tagPlayerName) && _onTheGround && !KalawasaController.HasCookie()) {
             
             _onTheGround = false;
+            _isInit = false;
             PickUp();
             PlaySound(_impactPickUp);
             transform.SetParent(collision.transform);
 
             collision.SendMessageUpwards("PickUpCookie");
 
-        } else if (collision.CompareTag(_tagBagName) && !_onTheGround) {
+        } else if (collision.CompareTag(_tagBagName) && !_onTheGround && !_isInit) {
             
             collision.SendMessageUpwards("WinCookie");
             GameManager.AddToScore(_valueHappiness);

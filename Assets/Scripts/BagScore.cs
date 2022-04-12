@@ -8,6 +8,7 @@ public class BagScore : MonoBehaviour
     public GameObject _addAnim;
 
     [SerializeField] private float _timeAddAnim = 1f;
+    [SerializeField] private Vector3 _offsetToPanel;
     private AudioSource _audio;
 
     private bool _isAllowedToEnter = false;
@@ -21,6 +22,8 @@ public class BagScore : MonoBehaviour
     void Update()
     {
         if (_isAllowedToEnter && KalawasaController.GetIsInit()) {
+
+            _enterToPanel.transform.position = Camera.main.WorldToScreenPoint(transform.position + _offsetToPanel);
             _enterToPanel.SetActive(true);
 
             if (Input.GetKeyDown(KeyCode.Return)) {
@@ -31,7 +34,6 @@ public class BagScore : MonoBehaviour
         } else {
             _enterToPanel.SetActive(false);
         }
-        
     }
 
     public void WinCookie()
