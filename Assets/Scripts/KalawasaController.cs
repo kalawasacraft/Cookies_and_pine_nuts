@@ -10,6 +10,9 @@ public class KalawasaController : MonoBehaviour
     [SerializeField] private float _speed = 1.5f;
     [SerializeField] private float _smoothVelocity = 0.05f;
     [SerializeField] private float _stunTime = 0.3f;
+    [SerializeField] private float _dashForce = 5f;
+    [SerializeField] private float _waitDashTime = 5f;
+
     [SerializeField] private AudioClip _closeEyes;
     [SerializeField] private AudioClip _rolling;
     public GameObject stunObject;
@@ -22,19 +25,23 @@ public class KalawasaController : MonoBehaviour
 
     private Vector2 _movement;
     private Vector3 _velocity = Vector3.zero;
+    private float _currentWaitTime = 0f;
     private bool _facingRight = false;
     private bool _isPickUp = false;
+    private bool _isDash = false;
     private bool _isInit = false;
     private bool _hasCookie = false;
     
     private string _goOutAnimationTriggerName = "GoOut";
     private string _pickUpAnimationTriggerName = "PickUp";
+    private string _dashAnimationTriggerName = "Dash";
     private string _isIdleAnimationBoolName = "IsIdle";
     private string _isRightAnimationBoolName = "IsRight";
     private string _idleRightAnimationName = "IdleRight";
     private string _idleLeftAnimationName = "IdleLeft";
     private string _initAnimationName = "Init";
     private string _tagPickUpName = "PickUp";
+    private string _tagDashName = "Dash";
     private string _tagRollingName = "Rolling";
     private string _layerOffsideName = "Offside";
     private string _layerMainName = "Default";
@@ -60,12 +67,12 @@ public class KalawasaController : MonoBehaviour
             float horizontalInput = Input.GetAxisRaw("Horizontal");
             float verticalInput = Input.GetAxisRaw("Vertical");
             
-            if (!_isPickUp) {
+            if (!_isPickUp && !_isDash) {
                 _movement = new Vector2(horizontalInput, 0f);
                 _facingRight = (horizontalInput > 0 ? true : (horizontalInput < 0 ? false : _facingRight));
             }
 
-            if (verticalInput == -1 && !_isPickUp) {
+            if (verticalInput == -1 && !_isPickUp && !_isDash) {
                 _movement = Vector2.zero;
                 _rigidbody.velocity = Vector2.zero;
                 if (!_hasCookie) {
@@ -73,6 +80,14 @@ public class KalawasaController : MonoBehaviour
                 } else {
                     DropCookie();
                 }
+            }
+
+            if (Input.GetButtonDown("Dash") && !_isPickUp && !_isDash && _currentWaitTime <= 0f) {
+                _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
+                _rigidbody.AddForce(Vector2.right * (_facingRight ? 1f : -1f) * _dashForce, ForceMode2D.Impulse);
+                
+                _animator.SetTrigger(_dashAnimationTriggerName);
+                StartCoroutine(InitWaitDashTime());
             }
         }
     }
@@ -107,6 +122,12 @@ public class KalawasaController : MonoBehaviour
             _isPickUp = true;
         } else {
             _isPickUp = false;
+        }
+
+        if (_animator.GetCurrentAnimatorStateInfo(0).IsTag(_tagDashName)) {
+            _isDash = true;
+        } else {
+            _isDash = false;
         }
     }
 
@@ -233,5 +254,19 @@ public class KalawasaController : MonoBehaviour
     {
         Instance.transform.position = Instance.startPoint.position;
         Instance._animator.Play(Instance._initAnimationName);
+    }
+
+    private IEnumerator InitWaitDashTime()
+    {
+        _currentWaitTime = _waitDashTime;        
+
+        while (_currentWaitTime > 0) {
+            GameManager.DrawDashSkillTime((_waitDashTime - _currentWaitTime) / _waitDashTime);
+            _currentWaitTime -= Time.deltaTime;
+
+            yield return null;
+        }
+
+        GameManager.DrawDashSkillTime(1f);
     }
 }

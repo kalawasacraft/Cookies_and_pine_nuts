@@ -13,6 +13,7 @@ public class UIManager : MonoBehaviour
     public GameObject _panelBoy;
     public AudioSource _audioBoy;
     public Image timer;
+    public Image dashSkillTimer;
 
     [SerializeField] private Color _startColor;
     [SerializeField] private Color _endColor;
@@ -39,9 +40,9 @@ public class UIManager : MonoBehaviour
         _maxWidth = timer.rectTransform.sizeDelta.x;
     }
 
-    public static void SetHighScore(float value)
+    public static void SetHighScore(float value, string nickname)
     {
-        Instance.highScore.SetText(value.ToString("0.00"));
+        Instance.highScore.SetText(nickname + " " + value.ToString("0.00"));
     }
 
     public static void SetScore(float value)
@@ -71,6 +72,11 @@ public class UIManager : MonoBehaviour
     private void RestoreColorDialog()
     {
         Instance.dialog.color = _currentColor;
+    }
+
+    public static void DrawDashSkillTime(float value)
+    {
+        Instance.dashSkillTimer.fillAmount = value;
     }
 
     public static void DrawBar(float value, float maxValue)

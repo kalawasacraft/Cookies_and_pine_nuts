@@ -9,10 +9,14 @@ public class PineNutsPooling : MonoBehaviour
     public GameObject prefab;
 
     [SerializeField] private int _amount = 8;
-    [SerializeField] private float _minInstantiateGap = 1;
-    [SerializeField] private float _maxInstantiateGap = 3;
+    //[SerializeField] private float _minInstantiateGap = 1;
+    //[SerializeField] private float _maxInstantiateGap = 3;
     [SerializeField] private float _minPositionX;
     [SerializeField] private float _maxPositionX;
+
+    private float _minInstantiateGap;
+    private float _maxInstantiateGap;
+    private float _gravityScale;
 
     void Awake()
     {
@@ -26,6 +30,10 @@ public class PineNutsPooling : MonoBehaviour
 
     public static void Init(float delayTime)
     {
+        Instance._minInstantiateGap = GameManager.GetMinInstantiateGapPineNuts();
+        Instance._maxInstantiateGap = GameManager.GetMaxInstantiateGapPineNuts();
+        Instance._gravityScale = GameManager.GetGravityScalePineNuts();
+
         Instance.Invoke("GetPineNutFromPool", delayTime);
     }
 
@@ -59,7 +67,7 @@ public class PineNutsPooling : MonoBehaviour
         }
 
         pineNut.transform.position = new Vector3(RandomNumber(_minPositionX, _maxPositionX), this.transform.position.y, this.transform.position.z);
-        pineNut.GetComponent<PineNutInit>().Init();
+        pineNut.GetComponent<PineNutInit>().Init(_gravityScale);
 
         Invoke("GetPineNutFromPool", RandomNumber(_minInstantiateGap, _maxInstantiateGap));
     }

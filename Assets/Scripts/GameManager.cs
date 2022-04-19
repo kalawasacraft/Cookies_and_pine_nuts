@@ -17,6 +17,11 @@ public class GameManager : MonoBehaviour
     private bool _timerGoing = false;
     private int _indexShouting = 0;
 
+    [Header("Parameters to level")]
+    public List<Vector2> _intervalInstantiateGapPineNuts;
+    public List<float> _gravityScalePineNuts;
+    public List<bool> _thereIsWind;
+
     void Awake()
     {
         GameManager.Instance = this;
@@ -43,14 +48,14 @@ public class GameManager : MonoBehaviour
 
     private void GetTopPlayer()
     {
-        DatabaseHandler.GetTopPlayers(1, players => {
+        DatabaseHandler.GetTopPlayers(1, GetGameLevel(), players => {
             
             if (players.Count == 1) {
                 var e = players.GetEnumerator();
                 e.MoveNext();
-                UIManager.SetHighScore(e.Current.Value.score);
+                UIManager.SetHighScore(e.Current.Value.score, "(" + e.Current.Value.name + ")");
             } else {
-                UIManager.SetHighScore(0f);
+                UIManager.SetHighScore(0f, "");
             }        
         });
     }
@@ -98,6 +103,31 @@ public class GameManager : MonoBehaviour
     public static int GetGameLevel()
     {
         return Instance._gameLevel;
+    }
+
+    public static float GetMinInstantiateGapPineNuts()
+    {
+        return Instance._intervalInstantiateGapPineNuts[Instance._gameLevel].x;
+    }
+
+    public static float GetMaxInstantiateGapPineNuts()
+    {
+        return Instance._intervalInstantiateGapPineNuts[Instance._gameLevel].y;
+    }
+
+    public static float GetGravityScalePineNuts()
+    {
+        return Instance._gravityScalePineNuts[Instance._gameLevel];
+    }
+
+    public static bool GetThereIsWind()
+    {
+        return Instance._thereIsWind[Instance._gameLevel];
+    }
+
+    public static void DrawDashSkillTime(float value)
+    {
+        UIManager.DrawDashSkillTime(value);
     }
 
     private IEnumerator UpdateTimer()
