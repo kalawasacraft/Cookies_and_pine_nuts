@@ -64,8 +64,8 @@ public class KalawasaController : MonoBehaviour
     {
         if (_isInit) {
             
-            float horizontalInput = Input.GetAxisRaw("Horizontal");
-            float verticalInput = Input.GetAxisRaw("Vertical");
+            float horizontalInput = SimpleInput.GetAxisRaw("Horizontal");
+            float verticalInput = SimpleInput.GetAxisRaw("Vertical");
             
             if (!_isPickUp && !_isDash) {
                 _movement = new Vector2(horizontalInput, 0f);
@@ -82,7 +82,7 @@ public class KalawasaController : MonoBehaviour
                 }
             }
 
-            if (Input.GetButtonDown("Dash") && !_isPickUp && !_isDash && _currentWaitTime <= 0f) {
+            if (SimpleInput.GetButtonDown("Dash") && !_isPickUp && !_isDash && _currentWaitTime <= 0f) {
                 _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
                 _rigidbody.AddForce(Vector2.right * (_facingRight ? 1f : -1f) * _dashForce, ForceMode2D.Impulse);
                 

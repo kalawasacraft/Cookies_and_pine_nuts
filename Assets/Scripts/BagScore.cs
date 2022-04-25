@@ -6,6 +6,7 @@ public class BagScore : MonoBehaviour
 {
     public GameObject _enterToPanel;
     public GameObject _addAnim;
+    public TMPro.TMP_Text textToEnterPanel;
 
     [SerializeField] private float _timeAddAnim = 1f;
     [SerializeField] private Vector3 _offsetToPanel;
@@ -19,6 +20,14 @@ public class BagScore : MonoBehaviour
         _audio = GetComponent<AudioSource>();
     }
 
+    void Start()
+    {
+        textToEnterPanel.SetText("press ENTER to finish the collection");
+        #if UNITY_ANDROID
+            textToEnterPanel.SetText("press HERE to finish the collection");
+        #endif
+    }
+
     void Update()
     {
         if (_isAllowedToEnter && KalawasaController.GetIsInit()) {
@@ -27,13 +36,18 @@ public class BagScore : MonoBehaviour
             _enterToPanel.SetActive(true);
 
             if (Input.GetKeyDown(KeyCode.Return)) {
-                KalawasaController.SetInitActive(false);
-                KalawasaController.CompletedHappiness();
-                GameManager.Completed();      
+                ReturnedHole();      
             }
         } else {
             _enterToPanel.SetActive(false);
         }
+    }
+
+    public void ReturnedHole()
+    {
+        KalawasaController.SetInitActive(false);
+        KalawasaController.CompletedHappiness();
+        GameManager.Completed();
     }
 
     public void WinCookie()
