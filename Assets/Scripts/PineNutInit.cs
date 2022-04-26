@@ -6,6 +6,7 @@ public class PineNutInit : MonoBehaviour
 {
     private SpriteRenderer _sprite;
     private AudioSource _audio;
+    private Rigidbody2D _rigidbody;
 
     [SerializeField] private float _fadeTime = 2f;
     private bool _isFirstCollisionGround = false;
@@ -24,15 +25,17 @@ public class PineNutInit : MonoBehaviour
     {
         _sprite = GetComponent<SpriteRenderer>();
         _audio = GetComponent<AudioSource>();
+        _rigidbody = GetComponent<Rigidbody2D>();
     }
 
-    public void Init()
+    public void Init(float gravityScale)
     {
         gameObject.SetActive(true);
         transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         _sprite.color = ChangeAlpha(1f);
         _isFirstCollisionGround = false;
         _isFirstCollisionPlayer = false;
+        _rigidbody.gravityScale = gravityScale;
         gameObject.layer = LayerMask.NameToLayer(_layerMainName);
     }
 

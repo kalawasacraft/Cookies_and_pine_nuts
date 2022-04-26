@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class AllCookies : MonoBehaviour
 {
-    //public static AllCookies Instance;
-
     public GameObject prefab;
 
     [SerializeField] private int _amount = 10;
@@ -13,11 +11,6 @@ public class AllCookies : MonoBehaviour
     [SerializeField] private float _maxSpeedValue = 2f;
     [SerializeField] private Vector2 _rangeDirectionX;
     [SerializeField] private Vector2 _rangeDirectionY;
-
-    void Awake()
-    {
-        //Instance = this;
-    }
 
     void Start()
     {

@@ -8,6 +8,11 @@ public class DatabaseHandler
 {
     private static readonly string databaseURL = AppGlobal.GetDatabaseURL();
     private static readonly string playersTable = AppGlobal.GetPlayersTable();
+    private static readonly List<string> levelTables = new List<string> {
+        AppGlobal.GetEasyTable(),
+        AppGlobal.GetMediumTable(),
+        AppGlobal.GetHardTable()
+    };
 
     private static fsSerializer serializer = new fsSerializer();
 
@@ -15,26 +20,26 @@ public class DatabaseHandler
     public delegate void GetPlayerCallback(Player player);
     public delegate void GetTopPlayersCallback(Dictionary<string, Player> players);
 
-    public static void GetPlayer(Player player, string playerId, GetPlayerCallback callback)
+    public static void GetPlayer(Player player, string playerId, int levelIndex, GetPlayerCallback callback)
     {
-        RestClient.Get<Player>($"{databaseURL}{playersTable}/{playerId}.json").Then(player => { 
+        RestClient.Get<Player>($"{databaseURL}{levelTables[levelIndex]}/{playerId}.json").Then(player => { 
             callback(player);
         }).Catch(err => {
             
-            PostPlayer(player, playerId, () => {});
+            PostPlayer(player, playerId, levelIndex, () => {});
         });
     }
 
-    public static void PostPlayer(Player player, string playerId, PostPlayerCallback callback)
+    public static void PostPlayer(Player player, string playerId, int levelIndex, PostPlayerCallback callback)
     {
-        RestClient.Put<Player>($"{databaseURL}{playersTable}/{playerId}.json", player).Then(response => {
+        RestClient.Put<Player>($"{databaseURL}{levelTables[levelIndex]}/{playerId}.json", player).Then(response => {
             callback(); 
         });
     }
 
-    public static void GetTopPlayers(int limit, GetTopPlayersCallback callback)
+    public static void GetTopPlayers(int limit, int levelIndex, GetTopPlayersCallback callback)
     {
-        RestClient.Get($"{databaseURL}{playersTable}.json?orderBy=\"score\"&limitToLast={limit}").Then(response =>
+        RestClient.Get($"{databaseURL}{levelTables[levelIndex]}.json?orderBy=\"score\"&limitToLast={limit}").Then(response =>
         {
             var responseJson = response.Text;
 
